@@ -5,25 +5,22 @@
 #include <conio.h>
 
 #include "Sokoban.h"
-
 //游戏地图
 int MAP[MAP_LINE][MAP_COLUMN] = {
-	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-	{0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0},
-	{0, 1, 4, 1, 0, 2, 1, 0, 2, 1, 0, 0},
-	{0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0},
-	{0, 1, 0, 2, 0, 1, 1, 4, 1, 1, 1, 0},
-	{0, 1, 1, 1, 0, 3, 1, 1, 1, 4, 1, 0},
-	{0, 1, 2, 1, 1, 4, 1, 1, 1, 1, 1, 0},
-	{0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0},
-	{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	{0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 1, 0, 1, 1, 1, 1, 1, 0},
+	{0, 1, 4, 1, 1, 2, 1, 1, 0},
+	{0, 1, 0, 1, 0, 1, 0, 1, 0},
+	{0, 1, 0, 2, 0, 1, 1, 1, 0},
+	{0, 1, 1, 4, 1, 3, 1, 1, 0},
+	{0, 1, 2, 1, 1, 4, 1, 1, 0},
+	{0, 1, 1, 1, 1, 1, 1, 1, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
-IMAGE images[MAP_IMAGES];
-const unsigned init_x = 5;
-const unsigned init_y = 5;
-human_struct human = { init_x, init_y, man, 0 };
-
+int init_x = 5;
+int init_y = 5;
+human_struct human = { init_x, init_y, man, map_floor };//初始人物一定站在地板上
 
 // 初始化地图
 void initMap();
@@ -61,6 +58,22 @@ void gameIsOver() {
 	outtextxy(350, 250, "恭喜过关！");
 }
 
+/// <summary>
+/// 检查一下人物脚下踩的东西
+/// </summary>
+void checkStatus()
+{
+	if (human.status == des) {
+		putimage(RATIO * human.x, RATIO * human.y, &images[des]);
+		MAP[human.x][human.y] = des;
+		human.status = map_floor;//如果是目的地，则改变英雄
+	}
+	else {
+		putimage(RATIO * human.x, RATIO * human.y, &images[map_floor]);
+		MAP[human.x][human.y] = map_floor;
+	}
+}
+
 int main() {
 	initMap();
 
@@ -82,20 +95,23 @@ void initMap() {
 	loadimage(&images[man], "./res/man.bmp", RATIO, RATIO, true);
 	loadimage(&images[box], "./res/box.bmp", RATIO, RATIO, true);
 
-	initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
+	if(debug)
+		initgraph(WINDOW_WIDTH, WINDOW_HEIGHT,EW_SHOWCONSOLE);
+	else
+		initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	putimage(0, 0, &bg_image);
 
 	for (int i = 0; i < MAP_LINE; i++) {
 		for (int j = 0; j < MAP_COLUMN; j++) {
-			putimage(RATIO * j, RATIO * i, &images[MAP[i][j]]);
+			putimage(RATIO * i, RATIO * j, &images[MAP[i][j]]);
 		}
 	}
 
 	//设置计数板
 	settextstyle(20, 0, "宋体");
-	outtextxy(750, 80, "当前关卡：");
-	outtextxy(750, 150, "当前步数：");
+	outtextxy(700, 80, "当前关卡：");
+	outtextxy(700, 150, "当前步数：");
 	outtextxy(850, 80, "1");
 	outtextxy(850, 150, "0");
 }
@@ -137,180 +153,69 @@ void gameControl() {
 	}
 }
 
-
 void moveOperation(DIRECTION directory) {
+	Pos humanOne = { 0,0 };//这个方向上的第一个位置
+	Pos humanTwo = { 0,0 };//这个方向上的第二个位置
+	int update = true;//只考虑不能更新的情况
+
 	switch (directory) {
 	case UP:
-		if (MAP[human.x - 1][human.y] >= 4 && MAP[human.x - 2][human.y] >= 1) {
-
-			if (MAP[human.x][human.y] == 3) {
-				putimage(RATIO * human.y, RATIO * human.x, &images[map_floor]);
-			}
-			else {
-				putimage(RATIO * human.y, RATIO * human.x, &images[MAP[human.x][human.y]]);
-			}
-			putimage(RATIO * human.y, RATIO * (human.x - 1), &images[human.status]);
-			putimage(RATIO * human.y, RATIO * (human.x - 2), &images[box]);
-			if (MAP[human.x - 1][human.y] == 5) {
-				MAP[human.x - 1][human.y] = 2;
-			}
-			else {
-				MAP[human.x - 1][human.y] = 1;
-			}
-
-			if (MAP[human.x - 2][human.y] == 2) {
-				MAP[human.x - 2][human.y] = 5;
-			}
-			else {
-				MAP[human.x - 2][human.y] = 4;
-			}
-			human.x--;
-			human.stepCount++;
-		}
-		else if (MAP[human.x - 1][human.y] >= 1 && MAP[human.x - 1][human.y] < 4) {
-			if (MAP[human.x][human.y] == 3) {
-				putimage(RATIO * human.y, RATIO * human.x, &images[map_floor]);
-			}
-			else {
-				putimage(RATIO * human.y, RATIO * human.x, &images[MAP[human.x][human.y]]);
-			}
-
-			putimage(RATIO * human.y, RATIO * (human.x - 1), &images[human.status]);
-			human.x--;
-			human.stepCount++;
-		}
-
-		break;
 	case DOWN:
-		if (MAP[human.x + 1][human.y] >= 4 && MAP[human.x + 2][human.y] >= 1) {
-			if (MAP[human.x][human.y] == 3) {
-				putimage(RATIO * human.y, RATIO * human.x, &images[map_floor]);
-			}
-			else {
-				putimage(RATIO * human.y, RATIO * human.x, &images[MAP[human.x][human.y]]);
-			}
-			putimage(RATIO * human.y, RATIO * (human.x + 1), &images[human.status]);
-			putimage(RATIO * human.y, RATIO * (human.x + 2), &images[box]);
-			if (MAP[human.x + 1][human.y] == 5) {
-				MAP[human.x + 1][human.y] = 2;
-			}
-			else {
-				MAP[human.x + 1][human.y] = 1;
-			}
-			if (MAP[human.x + 2][human.y] == 2) {
-				MAP[human.x + 2][human.y] = 5;
-			}
-			else {
-				MAP[human.x + 2][human.y] = 4;
-			}
-			human.x++;
-			human.stepCount++;
-
-		}
-		else if (MAP[human.x + 1][human.y] >= 1 && MAP[human.x + 1][human.y] < 4) {
-			if (MAP[human.x][human.y] == 3) {
-				putimage(RATIO * human.y, RATIO * human.x, &images[map_floor]);
-			}
-			else {
-				putimage(RATIO * human.y, RATIO * human.x, &images[MAP[human.x][human.y]]);
-			}
-			putimage(RATIO * human.y, RATIO * (human.x + 1), &images[human.status]);
-			human.x++;
-			human.stepCount++;
-		}
+		humanOne = { human.x, human.y + directory };
+		humanTwo = { human.x, human.y + 2 * directory };
 		break;
 	case LEFT:
-		if (MAP[human.x][human.y - 1] >= 4 && MAP[human.x][human.y - 2] >= 1) {
-			if (MAP[human.x][human.y] == 3) {
-				putimage(RATIO * human.y, RATIO * human.x, &images[map_floor]);
-			}
-			else {
-				putimage(RATIO * human.y, RATIO * human.x, &images[MAP[human.x][human.y]]);
-			}
-			putimage(RATIO * (human.y - 1), RATIO * human.x, &images[human.status]);
-			putimage(RATIO * (human.y - 2), RATIO * human.x, &images[box]);
-			if (MAP[human.x][human.y - 1] == 5) {
-				MAP[human.x][human.y - 1] = 2;
-			}
-			else {
-				MAP[human.x][human.y - 1] = 1;
-			}
-
-			if (MAP[human.x][human.y - 2] == 2) {
-				MAP[human.x][human.y - 2] = 5;
-			}
-			else {
-				MAP[human.x][human.y - 2] = 4;
-			}
-			human.y--;
-			human.stepCount++;
-		}
-		else if (MAP[human.x][human.y - 1] >= 1 && MAP[human.x][human.y - 1] < 4) {
-			if (MAP[human.x][human.y] == 3) {
-				putimage(RATIO * human.y, RATIO * human.x, &images[map_floor]);
-			}
-			else {
-				putimage(RATIO * human.y, RATIO * human.x, &images[MAP[human.x][human.y]]);
-			}
-			putimage(RATIO * (human.y - 1), RATIO * human.x, &images[human.status]);
-			human.y--;
-			human.stepCount++;
-		}
-		break;
 	case RIGHT:
-		if (MAP[human.x][human.y + 1] >= 4 && MAP[human.x][human.y + 2] >= 1) {
-			if (MAP[human.x][human.y] == 3) {
-				putimage(RATIO * human.y, RATIO * human.x, &images[map_floor]);
-			}
-			else {
-				int value = MAP[human.x][human.y];
-				putimage(RATIO * human.y, RATIO * human.x, &images[MAP[human.x][human.y]]);
-			}
-			putimage(RATIO * (human.y + 1), RATIO * human.x, &images[human.status]);
-			putimage(RATIO * (human.y + 2), RATIO * human.x, &images[box]);
-			if (MAP[human.x][human.y + 1] == 5) {
-				MAP[human.x][human.y + 1] = 2;
-			}
-			else {
-				MAP[human.x][human.y + 1] = 1;
-			}
-
-			if (MAP[human.x][human.y + 2] == 2) {
-				MAP[human.x][human.y + 2] = 5;
-			}
-			else {
-				MAP[human.x][human.y + 2] = 4;
-			}
-			human.y++;
-			human.stepCount++;
-		}
-		else if (MAP[human.x][human.y + 1] >= 1 && MAP[human.x][human.y + 1] < 4) {
-			if (MAP[human.x][human.y] == 3) {
-				putimage(RATIO * human.y, RATIO * human.x, &images[map_floor]);
-			}
-			else {
-				putimage(RATIO * human.y, RATIO * human.x, &images[MAP[human.x][human.y]]);
-			}
-			putimage(RATIO * (human.y + 1), RATIO * human.x, &images[human.status]);
-			human.y++;
-			human.stepCount++;
-		}
-		break;
-	default:
+		humanOne = { human.x + directory/2, human.y };
+		humanTwo = { human.x + directory, human.y };
 		break;
 	}
+
+	if (MAP[humanOne.x][humanOne.y] == map_floor || MAP[humanOne.x][humanOne.y] == des) {
+		checkStatus();
+		human.status = (material)MAP[humanOne.x][humanOne.y];
+	}
+	else if (MAP[humanOne.x][humanOne.y] == box) {
+		if (MAP[humanTwo.x][humanTwo.y] == map_floor || MAP[humanTwo.x][humanTwo.y] == des)
+		{
+			checkStatus();
+			putimage(RATIO * humanTwo.x, RATIO * humanTwo.y, &images[box]);
+			MAP[humanTwo.x][humanTwo.y] += 3;//变为box或者重叠
+		}
+		else{
+			update = false;
+		}
+	}
+	else if(MAP[humanOne.x][humanOne.y] == overlap){
+		if (MAP[humanTwo.x][humanTwo.y] == map_floor){
+			checkStatus();
+			putimage(RATIO * humanTwo.x, RATIO * humanTwo.y, &images[box]);
+			MAP[humanTwo.x][humanTwo.y] += 3;
+			human.status = des;
+		}
+		else{
+			update = false;//墙或者是人
+		}
+	}
+	else{
+		update = false;
+	}
+	
+	if (update)
+	{
+		putimage(RATIO * humanOne.x, RATIO * humanOne.y, &images[man]);
+		MAP[humanOne.x][humanOne.y] = man;
+		human.stepCount++;
+		human.x = humanOne.x;
+		human.y = humanOne.y;
+	}
+	
 	char* str = getStep(human.stepCount);
 	outtextxy(850, 150, str);
-	delete[] str;
+	if (str) delete[] str;
 }
 
-
-
 char* getStep(int step) {
-	if (!step) {
-		return NULL;
-	}
-
 	int len = 0;
 	int temp = step;
 	while (temp)

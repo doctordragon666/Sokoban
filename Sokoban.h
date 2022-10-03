@@ -5,9 +5,9 @@
 #define WINDOW_HEIGHT 550		// 游戏屏幕高度 - 像素
 
 #define MAP_LINE	9			// 游戏地图数组行数
-#define MAP_COLUMN	12			// 游戏地图数组列数
+#define MAP_COLUMN	9			// 游戏地图数组列数
 #define MAP_IMAGES	6			// 游戏地图图片道具个数
-#define RATIO		61			// 道具尺寸 - 像素
+#define RATIO		(61)			// 道具尺寸 - 像素
 
 #define KEY_UP		'w'			// 游戏热键控制 上键
 #define KEY_DOWN	's'			// 游戏热键控制 下键
@@ -15,6 +15,7 @@
 #define KEY_RIGHT	'd'			// 游戏热键控制 右键
 #define KEY_END		'q'			// 游戏热键控制 退出键
 
+static int debug = 0;
 
 // 道具枚举定义
 // wall  墙壁0
@@ -27,16 +28,17 @@ enum material {
 	map_floor,
 	des,
 	man,
-	box
+	box,
+	overlap //箱子和目的地的重合部分
 };
 
 // 人物行走方向枚举定义
 // 上、下、左、右
 enum DIRECTION {
-	UP,
-	DOWN,
-	LEFT,
-	RIGHT
+	UP = -1,
+	DOWN = 1,
+	LEFT = -2,
+	RIGHT = 2
 };
 
 /// <summary>
@@ -53,5 +55,15 @@ struct human_struct {
 };
 
 const unsigned short COUNT = 4;  // 统计步数所使用的内存空间
+
+struct _Pos
+{
+	int x;
+	int y;
+};
+
+typedef struct _Pos Pos;
+
+IMAGE images[MAP_IMAGES];//游戏资源的所有图片
 
 #endif // !BOX_MAN_H
