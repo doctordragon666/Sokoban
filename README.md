@@ -1,6 +1,7 @@
 # Sokoban
 
 It's a game of pushing boxes, a program developed based on Visual Studio and `EasyX`. All the code is process-oriented.
+[中文文档点这里](README_ZH.md)
 
 ## Running
 
