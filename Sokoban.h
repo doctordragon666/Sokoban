@@ -9,11 +9,11 @@
 #define MAP_IMAGES	6			// 游戏地图图片道具个数
 #define RATIO		(61)			// 道具尺寸 - 像素
 
-#define KEY_UP		'w'			// 游戏热键控制 上键
-#define KEY_DOWN	's'			// 游戏热键控制 下键
-#define KEY_LEFT	'a'			// 游戏热键控制 左键
-#define KEY_RIGHT	'd'			// 游戏热键控制 右键
-#define KEY_END		'q'			// 游戏热键控制 退出键
+#define KEY_UP		0x57			// 游戏热键控制 上键
+#define KEY_DOWN    0x53			// 游戏热键控制 下键
+#define KEY_LEFT	0x41			// 游戏热键控制 左键
+#define KEY_RIGHT	0x44		// 游戏热键控制 右键
+#define KEY_END		0x51			// 游戏热键控制 退出键
 
 static int debug = 0;
 
@@ -41,6 +41,12 @@ enum DIRECTION {
 	RIGHT = 2
 };
 
+typedef struct _Pos
+{
+	int x;
+	int y;
+}Pos;
+
 /// <summary>
 /// 人物结构体
 /// x,y坐标
@@ -55,14 +61,6 @@ struct human_struct {
 };
 
 const unsigned short COUNT = 4;  // 统计步数所使用的内存空间
-
-struct _Pos
-{
-	int x;
-	int y;
-};
-
-typedef struct _Pos Pos;
 
 IMAGE images[MAP_IMAGES];//游戏资源的所有图片
 

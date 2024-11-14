@@ -3,9 +3,10 @@
 #include <stdlib.h>
 #include <graphics.h>
 #include <conio.h>
+#include <string.h>
 
 #include "Sokoban.h"
-//游戏地图
+//游戏地图:TODO可以读取文件，或者采用随机生成的方式（这种方式要求有解）
 int MAP[MAP_LINE][MAP_COLUMN] = {
 	{0, 0, 0, 0, 0, 0, 0, 0, 0},
 	{0, 1, 0, 1, 1, 1, 1, 1, 0},
@@ -32,7 +33,13 @@ void gameControl();
 void moveOperation(DIRECTION);
 
 // 获取步数统计
-char* getStep(int);
+char* getStep(int step) {
+	char buffer[32];
+	sprintf_s(buffer, "%d", step);
+	char* p = new char[strlen(buffer) + 1];
+	strcpy_s(p, strlen(buffer) + 1, buffer);
+	return p;
+}
 
 /// <summary>
 /// 遍历地图，如果地图上面没有目标，也即目标被填充返回真。
@@ -56,6 +63,9 @@ void gameIsOver() {
 	cleardevice();
 	settextstyle(20, 0, "宋体");
 	outtextxy(350, 250, "恭喜过关！");
+	Sleep(3000);
+	closegraph();
+	//exit(0);
 }
 
 /// <summary>
@@ -76,13 +86,8 @@ void checkStatus()
 
 int main() {
 	initMap();
-
 	gameControl();
-
-	system("pause");
-	closegraph();
 	return 0;
-
 }
 
 void initMap() {
@@ -95,8 +100,8 @@ void initMap() {
 	loadimage(&images[man], "./res/man.bmp", RATIO, RATIO, true);
 	loadimage(&images[box], "./res/box.bmp", RATIO, RATIO, true);
 
-	if(debug)
-		initgraph(WINDOW_WIDTH, WINDOW_HEIGHT,EW_SHOWCONSOLE);
+	if (debug)
+		initgraph(WINDOW_WIDTH, WINDOW_HEIGHT, EW_SHOWCONSOLE);
 	else
 		initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -114,43 +119,39 @@ void initMap() {
 	outtextxy(700, 150, "当前步数：");
 	outtextxy(850, 80, "1");
 	outtextxy(850, 150, "0");
+
+	outtextxy(700, 300, "操作说明");
+	outtextxy(700, 350, "WASD上下左右");
+	outtextxy(700, 400, "Q立即退出");
 }
 
 void gameControl() {
-
-	bool gameOver = false;
-
-	while (!gameOver) {
-		if (_kbhit()) {
-			char key = _getch();
-			switch (key) {
-			case KEY_UP:
-				moveOperation(UP);
-				break;
-			case KEY_DOWN:
-				moveOperation(DOWN);
-				break;
-			case KEY_LEFT:
-				moveOperation(LEFT);
-				break;
-			case KEY_RIGHT:
-				moveOperation(RIGHT);
-				break;
-			case KEY_END:
-				gameOver = true;
-				cleardevice();
-				exit(-1);
-				break;
-			default:
-				break;
-			}
-			if (isGameOver()) {
-				gameOver = true;
-				gameIsOver();
-			}
+	while (!isGameOver()) {
+		ExMessage em;
+		getmessage(&em, EX_KEY);
+		if (em.prevdown) continue;
+		switch (em.vkcode) {
+		case KEY_UP:
+			moveOperation(UP);
+			break;
+		case KEY_DOWN:
+			moveOperation(DOWN);
+			break;
+		case KEY_LEFT:
+			moveOperation(LEFT);
+			break;
+		case KEY_RIGHT:
+			moveOperation(RIGHT);
+			break;
+		case KEY_END:
+			cleardevice();
+			exit(-1);
+			break;
+		default:
+			break;
 		}
-		Sleep(100);
 	}
+	gameIsOver();
 }
 
 void moveOperation(DIRECTION directory) {
@@ -166,7 +167,7 @@ void moveOperation(DIRECTION directory) {
 		break;
 	case LEFT:
 	case RIGHT:
-		humanOne = { human.x + directory/2, human.y };
+		humanOne = { human.x + directory / 2, human.y };
 		humanTwo = { human.x + directory, human.y };
 		break;
 	}
@@ -182,25 +183,25 @@ void moveOperation(DIRECTION directory) {
 			putimage(RATIO * humanTwo.x, RATIO * humanTwo.y, &images[box]);
 			MAP[humanTwo.x][humanTwo.y] += 3;//变为box或者重叠
 		}
-		else{
+		else {
 			update = false;
 		}
 	}
-	else if(MAP[humanOne.x][humanOne.y] == overlap){
-		if (MAP[humanTwo.x][humanTwo.y] == map_floor){
+	else if (MAP[humanOne.x][humanOne.y] == overlap) {
+		if (MAP[humanTwo.x][humanTwo.y] == map_floor) {
 			checkStatus();
 			putimage(RATIO * humanTwo.x, RATIO * humanTwo.y, &images[box]);
 			MAP[humanTwo.x][humanTwo.y] += 3;
 			human.status = des;
 		}
-		else{
+		else {
 			update = false;//墙或者是人
 		}
 	}
-	else{
+	else {
 		update = false;
 	}
-	
+
 	if (update)
 	{
 		putimage(RATIO * humanOne.x, RATIO * humanOne.y, &images[man]);
@@ -209,28 +210,8 @@ void moveOperation(DIRECTION directory) {
 		human.x = humanOne.x;
 		human.y = humanOne.y;
 	}
-	
+
 	char* str = getStep(human.stepCount);
 	outtextxy(850, 150, str);
 	if (str) delete[] str;
-}
-
-char* getStep(int step) {
-	int len = 0;
-	int temp = step;
-	while (temp)
-	{
-		temp /= 10;
-		len++;
-	}
-	char* p = new char[len + 1];
-	p[len] = '\0';
-
-	while (step) {
-		len--;
-		p[len] = step % 10 + '0';
-		step /= 10;
-	}
-
-	return p;
 }
